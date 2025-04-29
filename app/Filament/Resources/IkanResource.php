@@ -59,6 +59,13 @@ class IkanResource extends Resource
                     ->required()
                     ->numeric()
                     ->prefix('Rp'),
+                // === TAMBAHKAN FIELD STOK ===
+                Forms\Components\TextInput::make('stok')
+                    ->required()
+                    ->numeric() // Hanya menerima angka
+                    ->minValue(0) // Stok tidak bisa negatif
+                    ->default(0), // Nilai default saat membuat baru
+                // === AKHIR FIELD STOK ===
                 Forms\Components\Select::make('status_ketersediaan')
                     ->options([
                         'Tersedia' => 'Tersedia',
@@ -81,7 +88,7 @@ class IkanResource extends Resource
     {
         return $table
             ->columns([
-                // ImageColumn::make('gambar_utama') // <-- Bisa gunakan nama kelas langsung jika sudah di-import
+                // ImageColumn::make('gambar_utama') 
                 //     ->label('Gambar')
                 //     ->disk('public')
                 //     ->width(80)
@@ -96,7 +103,11 @@ class IkanResource extends Resource
                 TextColumn::make('harga')
                     ->money('IDR')
                     ->sortable(),
-                // Kode Baru (Recommended) - Sudah benar
+                // === TAMBAHKAN KOLOM STOK ===
+                TextColumn::make('stok')
+                    ->numeric() // Format sebagai angka
+                    ->sortable(),// Bisa diurutkan
+                // === AKHIR KOLOM STOK ===
                 TextColumn::make('status_ketersediaan')
                     ->label('Status')
                     ->badge()
