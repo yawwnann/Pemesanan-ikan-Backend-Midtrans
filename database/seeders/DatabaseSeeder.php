@@ -1,8 +1,8 @@
 <?php
+// database/seeders/DatabaseSeeder.php
 
 namespace Database\Seeders;
 
-use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -13,11 +13,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Panggil seeder lain jika ada (misal User, Kategori, Ikan)
+        // $this->call([
+        //     UserSeeder::class, // Pastikan ada user admin
+        //     KategoriIkanSeeder::class, // Pastikan ada kategori
+        //     IkanSeeder::class, // Pastikan ada data ikan dengan stok
+        // ]);
+        // Panggil seeder Kategori dulu
+        $this->call(KategoriIkanSeeder::class); // <-- Panggil Seeder Kategori
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Panggil seeder Ikan setelah Kategori ada
+        $this->call(IkanSeeder::class);         // <-- Panggil Seeder Ikan
+
+        // Panggil seeder pesanan
+        $this->call(PesananSeeder::class); // <-- TAMBAHKAN INI
     }
 }

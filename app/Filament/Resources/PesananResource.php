@@ -37,6 +37,11 @@ class PesananResource extends Resource
             ->schema([
                 TextInput::make('nama_pelanggan')->required()->maxLength(255),
                 TextInput::make('nomor_whatsapp')->label('Nomor WhatsApp')->tel()->maxLength(20)->required(),
+                Textarea::make('alamat_pengiriman')
+                    ->label('Alamat Pengiriman')
+                    ->rows(3) // Atur tinggi field
+                    ->nullable() // Boleh dikosongkan
+                    ->columnSpanFull(), // Ambil lebar penuh
                 DatePicker::make('tanggal_pesan')->label('Tanggal Pesan')->default(now()),
 
                 Repeater::make('items')
@@ -115,7 +120,6 @@ class PesananResource extends Resource
             ]);
     }
 
-    // Helper function untuk update total harga
     public static function updateTotalPrice(Get $get, Set $set): void
     {
         $items = $get('items');
@@ -140,6 +144,7 @@ class PesananResource extends Resource
                 TextColumn::make('nama_pelanggan')->searchable()->sortable(),
                 TextColumn::make('nomor_whatsapp')->searchable(),
                 TextColumn::make('total_harga')->money('IDR')->sortable(),
+
                 TextColumn::make('status')
                     ->badge()
                     ->color(fn(string $state): string => match ($state) {

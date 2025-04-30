@@ -17,6 +17,7 @@ class Pesanan extends Model
     protected $fillable = [
         'nama_pelanggan',
         'nomor_whatsapp',
+        'alamat_pengiriman',
         // 'ikan_id', // Hapus ini
         // 'ikan_dipesan', // Hapus ini juga
         'total_harga',

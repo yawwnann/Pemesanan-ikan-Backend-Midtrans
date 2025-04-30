@@ -1,4 +1,5 @@
 <?php
+// File: app/Providers/Filament/AdminPanelProvider.php
 
 namespace App\Providers\Filament;
 
@@ -12,48 +13,52 @@ use Filament\Support\Colors\Color;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
+use App\Filament\Widgets\IkanPopulerChart;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
+// Pastikan kedua use statement ini ada
+use App\Filament\Widgets\PesananStatsOverview;
+use App\Filament\Widgets\PesananBulananChart;
+
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
         return $panel
-            // Pengenal unik untuk panel ini
             ->id('admin')
-            // URL path untuk mengakses panel ini
             ->path('admin')
-            // Halaman login default Filament
             ->login()
-            // Pengaturan warna tema
             ->colors([
-                'primary' => Color::Amber, // Anda bisa ganti warnanya (misal: Blue, Indigo, Emerald, dll.)
+                'primary' => Color::Amber,
             ])
-            // Judul yang tampil di tab browser
-            ->brandName('Katalog Ikan CMS') // Ganti dengan nama aplikasi Anda
-            // Logo (opsional)
+            ->brandName('Admin Panel')
             // ->brandLogo(asset('images/logo.png'))
             // ->favicon(asset('images/favicon.png'))
-            // Menemukan Resources (seperti IkanResource, KategoriIkanResource) di direktori App/Filament/Resources
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
-            // Menemukan Pages (halaman kustom) di direktori App/Filament/Pages
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
-            // Halaman default setelah login (biasanya Dashboard)
             ->pages([
+                    // Pastikan halaman Dashboard default atau custom Anda terdaftar
                 Pages\Dashboard::class,
             ])
-            // Menemukan Widgets (seperti AccountWidget, FilamentInfoWidget) di direktori App/Filament/Widgets
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            // Widget default yang tampil di Dashboard
+            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets') // Biarkan discover aktif atau hapus jika daftar manual saja
+
+            // --- BAGIAN PENDAFTARAN WIDGET ---
             ->widgets([
-                // Widgets\AccountWidget::class, // Widget info akun user
-                // Widgets\FilamentInfoWidget::class, // Widget info versi Filament & PHP
+                    // Widget Default Filament (opsional, hapus komentar jika ingin ditampilkan)
+                    // Widgets\AccountWidget::class,
+                    // Widgets\FilamentInfoWidget::class,
+
+                    // Widget Custom Anda:
+                IkanPopulerChart::class,
+                PesananStatsOverview::class,
+                PesananBulananChart::class,
             ])
-            // Middleware yang dijalankan untuk setiap request ke panel admin
+            // --- AKHIR BAGIAN WIDGETS ---
+
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -65,17 +70,14 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
-            // Middleware khusus untuk otentikasi (memastikan user sudah login)
             ->authMiddleware([
                 Authenticate::class,
             ])
-            // (Opsional) Mendefinisikan grup navigasi secara eksplisit
-            // Berguna jika Anda ingin mengatur urutan atau ikon grup
             ->navigationGroups([
-                'Manajemen Katalog', // Nama grup yang Anda gunakan di Resource
-                // 'Settings', // Contoh grup lain
+                'Manajemen Katalog',
+                'Transaksi', // <-- Pastikan grup ini ada jika Resource/Widget Anda menggunakannya
+                // 'Settings',
             ]);
-        // Anda bisa menambahkan plugin di sini jika menggunakannya
         // ->plugins([...])
     }
 }

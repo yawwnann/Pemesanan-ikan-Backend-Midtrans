@@ -6,22 +6,24 @@ namespace App\Filament\Resources\PesananResource\Pages;
 use App\Filament\Resources\PesananResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ViewRecord;
-use Filament\Infolists\Infolist;
-use Filament\Infolists\Components;
+use Filament\Infolists\Infolist; // Pastikan ini diimport
+use Filament\Infolists\Components; // Pastikan ini diimport
 
 class ViewPesanan extends ViewRecord
 {
     protected static string $resource = PesananResource::class;
 
-    // Method untuk mendefinisikan tampilan Infolist
     public function infolist(Infolist $infolist): Infolist
     {
         return $infolist
             ->schema([
-                Components\Section::make('Informasi Pelanggan')
+                Components\Section::make('Informasi Pelanggan') // <-- Hanya ini
                     ->schema([
                         Components\TextEntry::make('nama_pelanggan'),
                         Components\TextEntry::make('nomor_whatsapp')->label('Nomor WhatsApp'),
+                        Components\TextEntry::make('alamat_pengiriman')
+                            ->label('Alamat Pengiriman')
+                            ->columnSpanFull(),
                     ])->columns(2),
                 Components\Section::make('Detail Pesanan')
                     ->schema([
@@ -40,10 +42,10 @@ class ViewPesanan extends ViewRecord
                 Components\Section::make('Item Ikan Dipesan')
                     ->schema([
                         // Menampilkan item dari relasi many-to-many
-                        Components\RepeatableEntry::make('items') // <-- Gunakan RepeatableEntry untuk relasi items
-                            ->label('') // Kosongkan label utama jika tidak perlu
+                        Components\RepeatableEntry::make('items')
+                            ->label('')
                             ->schema([
-                                Components\TextEntry::make('nama_ikan') // Ambil nama dari model Ikan terkait
+                                Components\TextEntry::make('nama_ikan')
                                     ->label('Nama Ikan')
                                     ->inlineLabel() // Label di samping
                                     ->weight('bold'),
