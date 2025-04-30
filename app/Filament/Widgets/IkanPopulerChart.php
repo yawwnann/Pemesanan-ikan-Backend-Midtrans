@@ -62,6 +62,6 @@ class IkanPopulerChart extends ChartWidget
     protected function getType(): string
     {
         // Jenis grafik: 'bar'
-        return 'bar';
+        return 'doughnut';
     }
 }
