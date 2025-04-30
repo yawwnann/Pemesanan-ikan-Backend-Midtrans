@@ -4,7 +4,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\PesananResource\Pages;
-use App\Filament\Resources\PesananResource\RelationManagers;
 use App\Models\Pesanan;
 use App\Models\Ikan;
 use Filament\Forms;
@@ -13,19 +12,16 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
-use Filament\Tables\Columns\TextColumn; // Pastikan ini diimport
-use Filament\Tables\Columns\IconColumn; // Import ini juga jika dipakai di tempat lain atau untuk testing
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Collection; // Mungkin tidak perlu jika tidak ada komputasi Collection manual
 
 class PesananResource extends Resource
 {
@@ -45,14 +41,20 @@ class PesananResource extends Resource
 
                 Repeater::make('items')
                     ->label('Item Ikan Dipesan')
+                    // ->relationship()
                     ->schema([
                         Select::make('ikan_id')
                             ->label('Ikan')
+
                             ->options(Ikan::query()->where('stok', '>', 0)->pluck('nama_ikan', 'id'))
                             ->required()
                             ->reactive()
                             ->afterStateUpdated(function (Set $set, ?string $state) {
                                 $ikan = Ikan::find($state);
+                                \Illuminate\Support\Facades\Log::info(
+                                    'Ikan found in afterStateUpdated:',
+                                    $ikan ? $ikan->toArray() : ['selected_id' => $state, 'result' => 'NOT FOUND']
+                                );
                                 $set('harga_saat_pesan', $ikan?->harga ?? 0);
                             })
                             ->distinct()
@@ -66,7 +68,7 @@ class PesananResource extends Resource
                             ->default(1)
                             ->reactive()
                             ->columnSpan(2),
-                        TextInput::make('harga_saat_pesan')
+                        TextInput::make('harga_saat_pesan') // Kolom Pivot
                             ->label('Harga Satuan')
                             ->numeric()
                             ->prefix('Rp')
@@ -77,7 +79,7 @@ class PesananResource extends Resource
                     ->columns(8)
                     ->defaultItems(1)
                     ->addActionLabel('Tambah Ikan Lain')
-                    ->live(debounce: 500)
+                    ->live(debounce: 500) // Tetap aktifkan untuk update total
                     ->afterStateUpdated(function (Get $get, Set $set) {
                         self::updateTotalPrice($get, $set);
                     })
@@ -90,8 +92,9 @@ class PesananResource extends Resource
                     ->label('Total Keseluruhan')
                     ->numeric()
                     ->prefix('Rp')
-                    ->readOnly(),
-                // ->required(), // Tetap tidak required
+                    ->readOnly()
+                // ->required() // Sebaiknya tidak required di form, dihitung saja
+                ,
 
                 Select::make('status')
                     ->label('Status Pesanan')
@@ -112,6 +115,7 @@ class PesananResource extends Resource
             ]);
     }
 
+    // Helper function untuk update total harga
     public static function updateTotalPrice(Get $get, Set $set): void
     {
         $items = $get('items');
@@ -120,7 +124,7 @@ class PesananResource extends Resource
             foreach ($items as $item) {
                 $jumlah = $item['jumlah'] ?? 0;
                 $harga = $item['harga_saat_pesan'] ?? 0;
-                if (!empty($jumlah) && !empty($harga)) { // Pengecekan ditambahkan
+                if (!empty($jumlah) && !empty($harga)) {
                     $total += $jumlah * $harga;
                 }
             }
@@ -135,32 +139,6 @@ class PesananResource extends Resource
                 TextColumn::make('tanggal_pesan')->date()->sortable(),
                 TextColumn::make('nama_pelanggan')->searchable()->sortable(),
                 TextColumn::make('nomor_whatsapp')->searchable(),
-
-                // === KEMBALIKAN KOLOM INI KE VERSI YANG BENAR ===
-                TextColumn::make('items_list') // Nama kolomnya bisa bebas
-                    ->label('Item Dipesan')
-                    ->formatStateUsing(function ($record) {
-                        $record->loadMissing('items');
-                        if ($record->items->isEmpty()) {
-                            return '-';
-                        }
-                        return $record->items->map(function ($ikan) {
-                            // Pastikan relasi items di Pesanan pakai ->withPivot('jumlah')
-                            return $ikan->nama_ikan . ' (' . ($ikan->pivot->jumlah ?? '?') . ')';
-                        })->implode(', ');
-                    })
-                    ->limit(50)
-                    ->tooltip(function ($record) {
-                        $record->loadMissing('items');
-                        if ($record->items->isEmpty()) {
-                            return null;
-                        }
-                        return $record->items->map(function ($ikan) {
-                            return $ikan->nama_ikan . ' (' . ($ikan->pivot->jumlah ?? '?') . ')';
-                        })->implode("\n");
-                    }),
-                // ==============================================
-
                 TextColumn::make('total_harga')->money('IDR')->sortable(),
                 TextColumn::make('status')
                     ->badge()
@@ -177,9 +155,17 @@ class PesananResource extends Resource
             ])
             ->filters([
                 SelectFilter::make('status')
-                    ->options([ /* ... opsi filter status ... */])
+                    ->options([
+                        'Baru' => 'Baru',
+                        'Diproses' => 'Diproses',
+                        'Dikirim' => 'Dikirim',
+                        'Selesai' => 'Selesai',
+                        'Batal' => 'Batal',
+                    ])
             ])
             ->actions([
+                Tables\Actions\ViewAction::make()
+                    ->color('success'),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -204,6 +190,7 @@ class PesananResource extends Resource
             'index' => Pages\ListPesanans::route('/'),
             'create' => Pages\CreatePesanan::route('/create'),
             'edit' => Pages\EditPesanan::route('/{record}/edit'),
+            'view' => Pages\ViewPesanan::route('/{record}'),
         ];
     }
 }

@@ -31,8 +31,8 @@ class EventServiceProvider extends ServiceProvider
      * @var array<string, array<int, string>|string> // Type hint bisa sedikit berbeda
      */
     protected $observers = [
-            // --- DAFTARKAN OBSERVER ANDA DI SINI ---
-        Pesanan::class => [PesananObserver::class],
+        // --- DAFTARKAN OBSERVER ANDA DI SINI ---
+        // Pesanan::class => [PesananObserver::class],
         // --- AKHIR PENDAFTARAN OBSERVER ---
 
         // Contoh lain (jika ada):

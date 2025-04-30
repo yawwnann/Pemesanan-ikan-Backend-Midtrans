@@ -42,7 +42,7 @@ class KategoriIkanResource extends Resource
                     ->afterStateUpdated(fn(Set $set, ?string $state) => $set('slug', Str::slug($state))),
                 Forms\Components\TextInput::make('slug')
                     ->required()
-                    ->unique(KategoriIkan::class, 'slug', ignoreRecord: true) // Pastikan unik, abaikan record saat edit
+                    ->unique(KategoriIkan::class, 'slug', ignoreRecord: true)
                     ->maxLength(120),
                 Forms\Components\Textarea::make('deskripsi')
                     ->nullable()
