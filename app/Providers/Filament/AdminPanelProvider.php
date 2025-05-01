@@ -3,9 +3,14 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Resources\UserResource;
+use App\Filament\Widgets\IkanPopulerChart;
+use App\Filament\Widgets\PesananBulananChart;
+use App\Filament\Widgets\PesananStatsOverview;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\MenuItem;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -13,52 +18,58 @@ use Filament\Support\Colors\Color;
 use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
-use App\Filament\Widgets\IkanPopulerChart;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Auth; // Pastikan Auth facade diimport
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-
-// Pastikan kedua use statement ini ada
-use App\Filament\Widgets\PesananStatsOverview;
-use App\Filament\Widgets\PesananBulananChart;
 
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
         return $panel
+            ->default() // Menandakan ini panel default jika hanya ada satu
             ->id('admin')
             ->path('admin')
             ->login()
             ->colors([
                 'primary' => Color::Amber,
             ])
-            ->brandName('Admin Panel')
-            // ->brandLogo(asset('images/logo.png'))
-            // ->favicon(asset('images/favicon.png'))
+            ->brandName('Katalog Ikan CMS') // Nama aplikasi Anda
+            // ->brandLogo(asset('images/logo.png')) // Opsional logo
+            // ->favicon(asset('images/favicon.png')) // Opsional favicon
+
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
-                    // Pastikan halaman Dashboard default atau custom Anda terdaftar
-                Pages\Dashboard::class,
+                Pages\Dashboard::class, // Halaman Dashboard
             ])
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets') // Biarkan discover aktif atau hapus jika daftar manual saja
+            // ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets') // Bisa dinonaktifkan jika mendaftar manual di bawah
 
-            // --- BAGIAN PENDAFTARAN WIDGET ---
+            // Pendaftaran Widget Dashboard Eksplisit
             ->widgets([
-                    // Widget Default Filament (opsional, hapus komentar jika ingin ditampilkan)
+                    // Nonaktifkan widget default jika tidak perlu
                     // Widgets\AccountWidget::class,
                     // Widgets\FilamentInfoWidget::class,
 
-                    // Widget Custom Anda:
-                IkanPopulerChart::class,
+                    // Widget custom Anda
                 PesananStatsOverview::class,
                 PesananBulananChart::class,
+                IkanPopulerChart::class,
             ])
-            // --- AKHIR BAGIAN WIDGETS ---
 
+            // Item Menu User Tambahan
+            ->userMenuItems([
+                MenuItem::make()
+                    ->label('Edit Profil Saya')
+                    ->url(fn(): string => UserResource::getUrl('edit', ['record' => Auth::user()]))
+                    ->icon('heroicon-o-user-circle'),
+                // Item lain bisa ditambahkan di sini
+            ])
+
+            // Middleware standar Filament/Laravel
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -70,14 +81,18 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
+
+            // Middleware otentikasi
             ->authMiddleware([
                 Authenticate::class,
             ])
+
+            // Grup Navigasi di Sidebar
             ->navigationGroups([
                 'Manajemen Katalog',
-                'Transaksi', // <-- Pastikan grup ini ada jika Resource/Widget Anda menggunakannya
-                // 'Settings',
+                'Transaksi',
+                // Tambahkan grup lain jika perlu
             ]);
-        // ->plugins([...])
+        // ->plugins([...]) // Jika pakai plugin
     }
 }
