@@ -1,5 +1,6 @@
 <?php
-
+use Illuminate\Support\Facades\Facade;
+use Illuminate\Support\ServiceProvider;
 return [
 
     /*
@@ -122,5 +123,25 @@ return [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
+
+    'providers' => ServiceProvider::defaultProviders()->merge([
+        /*
+         * Package Service Providers...
+         */
+
+        /*
+         * Application Service Providers...
+         */
+        App\Providers\AppServiceProvider::class,
+        // App\Providers\AuthServiceProvider::class,
+        // App\Providers\BroadcastServiceProvider::class, // Biasanya dikomentari default
+        App\Providers\EventServiceProvider::class,
+        App\Providers\RouteServiceProvider::class,       // <-- PASTIKAN INI ADA & TIDAK DIKOMENTARI
+        // App\Providers\FortifyServiceProvider::class,     // Jika pakai Fortify/Jetstream
+        // App\Providers\JetstreamServiceProvider::class,   // Jika pakai Jetstream
+        App\Providers\Filament\AdminPanelProvider::class, // <-- Provider Panel Filament Anda
+
+    ])->toArray(),
+
 
 ];
