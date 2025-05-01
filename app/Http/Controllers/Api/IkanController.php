@@ -1,11 +1,12 @@
 <?php
+
 // File: app/Http/Controllers/Api/IkanController.php
 
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Resources\IkanResource; // Import IkanResource
-use App\Http\Resources\KategoriResource; // Import KategoriResource
+use App\Http\Resources\IkanResource;
+use App\Http\Resources\KategoriResource;
 use App\Models\Ikan;
 use App\Models\KategoriIkan;
 use Illuminate\Http\Request;
@@ -13,45 +14,48 @@ use Illuminate\Http\Request;
 class IkanController extends Controller
 {
     /**
-     * Menampilkan daftar semua ikan (dengan paginasi).
+     * Menampilkan daftar semua ikan dengan paginasi.
      */
     public function index(Request $request)
     {
-        // Eager load relasi kategori untuk efisiensi
-        $ikanQuery = Ikan::with('kategori')->where('stok', '>', 0); // Hanya tampilkan yg ada stok
+        // Eager load relasi kategori dan filter stok > 0
+        $ikanQuery = Ikan::with('kategori')->where('stok', '>', 0);
 
-        // Contoh filter berdasarkan kategori (opsional)
+        // Filter berdasarkan kategori_slug jika ada
         if ($request->has('kategori_slug')) {
             $ikanQuery->whereHas('kategori', function ($query) use ($request) {
                 $query->where('slug', $request->query('kategori_slug'));
             });
         }
 
-        // Ambil data dengan paginasi (misal 12 per halaman)
+        // Ambil data ikan dengan paginasi
         $ikan = $ikanQuery->orderBy('nama_ikan', 'asc')->paginate(12);
 
-        // Kembalikan sebagai collection resource (otomatis menyertakan info paginasi)
+        // Kembalikan sebagai resource collection dengan info paginasi
         return IkanResource::collection($ikan);
     }
 
     /**
      * Menampilkan detail satu ikan berdasarkan slug.
      */
-    public function show(Ikan $ikan) // Gunakan Route Model Binding
+    public function show(Ikan $ikan)
     {
-        // Load relasi kategori jika belum
+        // Load relasi kategori jika belum ada
         $ikan->loadMissing('kategori');
 
-        // Kembalikan sebagai single resource
+        // Kembalikan sebagai resource tunggal
         return new IkanResource($ikan);
     }
 
     /**
-     * (Opsional) Menampilkan daftar semua kategori.
+     * Menampilkan daftar semua kategori ikan.
      */
     public function daftarKategori()
     {
+        // Ambil semua kategori ikan
         $kategori = KategoriIkan::orderBy('nama_kategori', 'asc')->get();
+
+        // Kembalikan sebagai resource collection
         return KategoriResource::collection($kategori);
     }
 }

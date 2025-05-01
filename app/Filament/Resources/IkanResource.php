@@ -15,13 +15,13 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Str;
 use Filament\Forms\Set;
 use Filament\Forms\Components\RichEditor;
-use Filament\Tables\Columns\TextColumn; // <-- Import untuk TextColumn (opsional tapi baik)
-use Filament\Tables\Columns\ImageColumn; // <-- Import (opsional tapi baik)
-use Filament\Tables\Filters\SelectFilter; // <-- Import (opsional tapi baik)
-use Filament\Tables\Actions\EditAction; // <-- Import (opsional tapi baik)
-use Filament\Tables\Actions\DeleteAction; // <-- Import (opsional tapi baik)
-use Filament\Tables\Actions\BulkActionGroup; // <-- Import (opsional tapi baik)
-use Filament\Tables\Actions\DeleteBulkAction; // <-- Import (opsional tapi baik)
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\BulkActionGroup;
+use Filament\Tables\Actions\DeleteBulkAction;
 
 
 class IkanResource extends Resource
@@ -52,20 +52,19 @@ class IkanResource extends Resource
                     ->required()
                     ->unique(Ikan::class, 'slug', ignoreRecord: true)
                     ->maxLength(170),
-                Forms\Components\RichEditor::make('deskripsi') // <-- Pemanggilan sudah benar
+                Forms\Components\RichEditor::make('deskripsi')
                     ->nullable()
                     ->columnSpanFull(),
                 Forms\Components\TextInput::make('harga')
                     ->required()
                     ->numeric()
                     ->prefix('Rp'),
-                // === TAMBAHKAN FIELD STOK ===
+
                 Forms\Components\TextInput::make('stok')
                     ->required()
-                    ->numeric() // Hanya menerima angka
-                    ->minValue(0) // Stok tidak bisa negatif
-                    ->default(0), // Nilai default saat membuat baru
-                // === AKHIR FIELD STOK ===
+                    ->numeric()
+                    ->minValue(0)
+                    ->default(0),
                 Forms\Components\Select::make('status_ketersediaan')
                     ->options([
                         'Tersedia' => 'Tersedia',
@@ -103,11 +102,10 @@ class IkanResource extends Resource
                 TextColumn::make('harga')
                     ->money('IDR')
                     ->sortable(),
-                // === TAMBAHKAN KOLOM STOK ===
                 TextColumn::make('stok')
-                    ->numeric() // Format sebagai angka
-                    ->sortable(),// Bisa diurutkan
-                // === AKHIR KOLOM STOK ===
+                    ->numeric()
+                    ->sortable(),
+
                 TextColumn::make('status_ketersediaan')
                     ->label('Status')
                     ->badge()

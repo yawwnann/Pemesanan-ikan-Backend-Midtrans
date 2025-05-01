@@ -14,9 +14,9 @@ class UserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'roles' => $this->whenLoaded('roles', function () {
-                return $this->roles->pluck('name'); // Ambil nama roles saja
+                return $this->roles->pluck('name');
             }),
-            'email_verified_at' => $this->email_verified_at?->toISOString(), // Format tanggal ISO
+            'email_verified_at' => $this->email_verified_at?->toISOString(),
 
             'created_at' => $this->created_at?->toISOString(),
         ];

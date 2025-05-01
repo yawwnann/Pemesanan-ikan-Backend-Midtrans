@@ -1,4 +1,5 @@
 <?php
+
 // File: app/Filament/Resources/PesananResource.php
 
 namespace App\Filament\Resources;
@@ -21,11 +22,10 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\SelectColumn; // Untuk status editable
+use Filament\Tables\Columns\SelectColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
-use Filament\Forms\Components\Select as FormSelect; // Alias untuk Select di form filter
-
+use Filament\Forms\Components\Select as FormSelect;
 
 class PesananResource extends Resource
 {
@@ -54,17 +54,15 @@ class PesananResource extends Resource
                     ->columnSpanFull(),
                 Select::make('user_id')
                     ->label('User Terdaftar (Opsional)')
-                    ->relationship('user', 'name') // Relasi ke 'user', tampilkan 'name'
+                    ->relationship('user', 'name')
                     ->searchable()
                     ->placeholder('Pilih User jika pesanan dari user terdaftar')
                     ->helperText('Kosongkan jika pesanan bukan dari user terdaftar.'),
                 DatePicker::make('tanggal_pesan')
                     ->label('Tanggal Pesan')
                     ->default(now()),
-
                 Repeater::make('items')
                     ->label('Item Ikan Dipesan')
-                    // ->relationship() // Tidak pakai ini, handle manual di Pages
                     ->schema([
                         Select::make('ikan_id')
                             ->label('Ikan')
@@ -97,17 +95,15 @@ class PesananResource extends Resource
                     ->columns(8)
                     ->defaultItems(1)
                     ->addActionLabel('Tambah Ikan Lain')
-                    ->live(debounce: 500) // Aktifkan live update total
+                    ->live(debounce: 500)
                     ->afterStateUpdated(fn(Get $get, Set $set) => self::updateTotalPrice($get, $set))
                     ->deleteAction(fn(Get $get, Set $set) => self::updateTotalPrice($get, $set))
                     ->columnSpanFull(),
-
                 TextInput::make('total_harga')
                     ->label('Total Keseluruhan')
                     ->numeric()
                     ->prefix('Rp')
-                    ->readOnly(), // readOnly, nilai dihitung otomatis
-
+                    ->readOnly(),
                 Select::make('status')
                     ->label('Status Pesanan')
                     ->options([
@@ -119,7 +115,6 @@ class PesananResource extends Resource
                     ])
                     ->required()
                     ->default('Baru'),
-
                 Textarea::make('catatan')
                     ->label('Catatan Admin')
                     ->rows(3)
@@ -151,7 +146,7 @@ class PesananResource extends Resource
             ->columns([
                 TextColumn::make('tanggal_pesan')
                     ->date()
-                    ->sortable(), // Sortable
+                    ->sortable(),
                 TextColumn::make('nama_pelanggan')
                     ->searchable()
                     ->sortable(),
@@ -161,7 +156,7 @@ class PesananResource extends Resource
                     ->money('IDR')
                     ->sortable(),
                 TextColumn::make('status')
-                    ->label('Status') // Tambahkan label jika perlu
+                    ->label('Status')
                     ->badge()
                     ->color(fn(string $state): string => match ($state) {
                         'Baru' => 'warning',
@@ -176,7 +171,7 @@ class PesananResource extends Resource
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('alamat_pengiriman') // Kolom alamat (opsional)
+                TextColumn::make('alamat_pengiriman')
                     ->label('Alamat')
                     ->limit(40)
                     ->tooltip(fn($state): ?string => $state)
@@ -225,20 +220,19 @@ class PesananResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()
-                    ->label('Details') // Ubah label
-                    ->color('success'),  // Ubah warna
+                    ->label('Details')
+                    ->color('success'),
                 Tables\Actions\EditAction::make()
-                    ->color('success'),  // Ubah warna (opsional)
+                    ->color('success'),
                 Tables\Actions\DeleteAction::make()
                     ->color('danger'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                    // Bisa tambahkan BulkAction ubah status di sini jika perlu
                 ]),
             ])
-            ->defaultSort('tanggal_pesan', 'desc'); // Urutkan berdasarkan tanggal pesan terbaru
+            ->defaultSort('tanggal_pesan', 'desc');
     }
 
     public static function getRelations(): array
@@ -248,7 +242,6 @@ class PesananResource extends Resource
 
     public static function getPages(): array
     {
-        // Pastikan ini mengarah ke Class Page yang benar
         return [
             'index' => Pages\ListPesanans::route('/'),
             'create' => Pages\CreatePesanan::route('/create'),

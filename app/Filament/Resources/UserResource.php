@@ -1,32 +1,28 @@
 <?php
-// File: app/Filament/Resources/UserResource.php
 
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
-use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
-use Illuminate\Support\Facades\Hash; // <-- Import Hash
-use Filament\Pages\Page; // <-- Import Page
+use Illuminate\Support\Facades\Hash;
+use Filament\Pages\Page;
+use Filament\Tables\Columns\TextColumn;
 
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
-    protected static ?string $navigationLabel = 'Pengguna Admin'; // Label Navigasi
-    protected static ?string $modelLabel = 'Pengguna Admin'; // Label Model Tunggal
-    protected static ?string $pluralModelLabel = 'Pengguna Admin'; // Label Model Jamak
-    protected static ?string $navigationGroup = 'Pengaturan'; // Contoh Grup
+    protected static ?string $navigationLabel = 'Manajemen Pengguna';
+    protected static ?string $modelLabel = 'Manajemen Pengguna';
+    protected static ?string $pluralModelLabel = 'Manajemen Pengguna';
+    protected static ?string $navigationGroup = 'Pengaturan';
 
     public static function form(Form $form): Form
     {
@@ -40,34 +36,30 @@ class UserResource extends Resource
                     ->label('Alamat Email')
                     ->email()
                     ->required()
-                    ->unique(ignoreRecord: true) // Unik, abaikan record saat ini (untuk edit)
+                    ->unique(ignoreRecord: true)
                     ->maxLength(255),
                 TextInput::make('password')
                     ->label('Password Baru')
-                    ->password() // Input type password
-                    // Hanya required saat membuat user baru
+                    ->password()
                     ->required(fn(Page $livewire): bool => $livewire instanceof Pages\CreateUser)
-                    // Nonaktifkan requirement saat edit (hanya isi jika ingin ganti)
-                    ->visibleOn('create') // Hanya visible di halaman create by default (lihat bawah)
-                    ->dehydrateStateUsing(fn($state) => Hash::make($state)) // Hash password saat disimpan
-                    ->dehydrated(fn($state) => filled($state)) // Hanya proses jika field diisi
+                    ->visibleOn('create')
+                    ->dehydrateStateUsing(fn($state) => Hash::make($state))
+                    ->dehydrated(fn($state) => filled($state))
                     ->maxLength(255),
-                // Untuk Edit: Tampilkan field password baru secara terpisah jika perlu
                 TextInput::make('new_password')
                     ->label('Password Baru (Edit)')
                     ->password()
-                    ->nullable() // Tidak wajib diisi saat edit
-                    ->visibleOn('edit') // Hanya tampil saat edit
+                    ->nullable()
+                    ->visibleOn('edit')
                     ->dehydrateStateUsing(fn($state) => Hash::make($state))
-                    ->dehydrated(fn($state) => filled($state)) // Hanya proses jika field diisi
+                    ->dehydrated(fn($state) => filled($state))
                     ->helperText('Isi hanya jika ingin mengubah password.'),
                 TextInput::make('new_password_confirmation')
                     ->label('Konfirmasi Password Baru')
                     ->password()
-                    ->same('new_password') // Validasi harus sama dengan new_password
-                    ->requiredWith('new_password') // Wajib jika new_password diisi
+                    ->same('new_password')
+                    ->requiredWith('new_password')
                     ->visibleOn('edit'),
-
             ]);
     }
 
@@ -87,10 +79,7 @@ class UserResource extends Resource
                     ->label('Dibuat Pada')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true), // Sembunyikan default
-            ])
-            ->filters([
-                // Filter bisa ditambahkan di sini jika perlu
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -105,20 +94,15 @@ class UserResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            // Relation manager bisa ditambahkan di sini
-        ];
+        return [];
     }
 
-    // --- BAGIAN PENTING UNTUK ROUTE ---
-    // Menggunakan struktur standar List, Create, Edit pages
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListUsers::route('/'),       // Halaman Daftar
-            'create' => Pages\CreateUser::route('/create'), // Halaman Buat
-            'edit' => Pages\EditUser::route('/{record}/edit'), // Halaman Edit
+            'index' => Pages\ListUsers::route('/'),
+            'create' => Pages\CreateUser::route('/create'),
+            'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
     }
-    // --- AKHIR BAGIAN PENTING ---
 }

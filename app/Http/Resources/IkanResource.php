@@ -18,15 +18,15 @@ class IkanResource extends JsonResource
         // Tentukan data apa saja yang ingin ditampilkan di API
         return [
             'id' => $this->id,
-            'nama' => $this->nama_ikan, // Ganti nama field jika perlu
+            'nama' => $this->nama_ikan,
             'slug' => $this->slug,
             'deskripsi' => $this->deskripsi,
-            'harga' => (int) $this->harga, // Jadikan integer
+            'harga' => (int) $this->harga,
             'stok' => (int) $this->stok,
             'status_ketersediaan' => $this->status_ketersediaan,
-            // Buat URL lengkap untuk gambar jika ada
+            // Buat URL lengkap untuk gambar
             'gambar_url' => $this->gambar_utama ? Storage::url($this->gambar_utama) : null,
-            'kategori' => KategoriResource::make($this->whenLoaded('kategori')), // Masukkan data kategori jika di-load
+            'kategori' => KategoriResource::make($this->whenLoaded('kategori')),
             'dibuat_pada' => $this->created_at,
             'diupdate_pada' => $this->updated_at,
         ];

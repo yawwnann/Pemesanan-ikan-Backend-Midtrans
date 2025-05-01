@@ -74,9 +74,6 @@ class AuthController extends Controller
         // Ambil user setelah otentikasi berhasil
         $user = User::where('email', $credentials['email'])->firstOrFail();
 
-        // Hapus token lama (opsional, jika ingin single login saja)
-        // $user->tokens()->delete();
-
         // Muat hubungan roles yang dimiliki oleh user
         $user->load('roles');
 

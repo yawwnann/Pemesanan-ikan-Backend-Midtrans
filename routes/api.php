@@ -1,4 +1,5 @@
 <?php
+
 // File: routes/api.php
 
 use Illuminate\Http\Request;
@@ -8,16 +9,17 @@ use App\Http\Controllers\Api\PesananApiController;
 use App\Http\Controllers\Api\AuthController;
 
 /*
-|----------------------------------------------------------------------
+|--------------------------------------------------------------------------
 | API Routes
-|----------------------------------------------------------------------
-| Here is where you can register API routes for your application.
+|--------------------------------------------------------------------------
+| This is where you can register API routes for your application.
 | These routes are loaded by the RouteServiceProvider and all of them
 | will be assigned to the "api" middleware group. Make something great!
 |
 */
 
 // == API Endpoints Katalog Ikan (Publik) ==
+
 // Endpoint untuk mendapatkan daftar kategori ikan
 Route::get('/kategori', [IkanController::class, 'daftarKategori'])->name('api.kategori.index');
 
@@ -29,28 +31,29 @@ Route::get('/ikan/{ikan:slug}', [IkanController::class, 'show'])->name('api.ikan
 
 
 // == API Endpoints Otentikasi (Publik) ==
-// Endpoint untuk melakukan registrasi
+
+// Endpoint untuk melakukan registrasi pengguna
 Route::post('/register', [AuthController::class, 'register'])->name('api.register');
 
-// Endpoint untuk login dan mendapatkan token
+// Endpoint untuk login dan mendapatkan token autentikasi
 Route::post('/login', [AuthController::class, 'login'])->name('api.login');
 
 
-// == API Endpoints yang Membutuhkan Otentikasi (Sanctum Token) ==
+// == API Endpoints yang Memerlukan Otentikasi (Sanctum Token) ==
+
 // Semua endpoint yang memerlukan otentikasi berada di dalam grup ini
 Route::middleware('auth:sanctum')->group(function () {
 
-    // Endpoint untuk logout
+    // Endpoint untuk melakukan logout dan menghapus token
     Route::post('/logout', [AuthController::class, 'logout'])->name('api.logout');
 
-    // Endpoint untuk mendapatkan data user yang sedang login
+    // Endpoint untuk mendapatkan data pengguna yang sedang login
     Route::get('/user', [AuthController::class, 'user'])->name('api.user');
 
-    // Endpoint untuk membuat pesanan
+    // Endpoint untuk membuat pesanan baru
     Route::post('/pesanan', [PesananApiController::class, 'store'])->name('api.pesanan.store');
 
-    // TODO: Tambahkan endpoint Pesanan lainnya (index, show, update, destroy) jika perlu proteksi
-    // Contoh untuk mengelola pesanan
+    //untuk mengelola pesanan:
     // Route::get('/pesanan', [PesananApiController::class, 'index'])->name('api.pesanan.index');
     // Route::get('/pesanan/{pesanan}', [PesananApiController::class, 'show'])->name('api.pesanan.show');
     // Route::put('/pesanan/{pesanan}', [PesananApiController::class, 'update'])->name('api.pesanan.update');
