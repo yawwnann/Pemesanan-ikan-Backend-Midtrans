@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens; // <-- WAJIB ADA
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Authenticatable
@@ -31,6 +32,11 @@ class User extends Authenticatable
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'role_user');
+    }
+
+    public function pesanan(): HasMany // Nama method bisa 'pesanan' atau 'orders'
+    {
+        return $this->hasMany(Pesanan::class, 'user_id'); // Model target, foreign key
     }
 
     // Opsional: helper untuk cek role

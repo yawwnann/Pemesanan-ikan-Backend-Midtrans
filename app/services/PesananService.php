@@ -1,10 +1,11 @@
 <?php
 // File: app/Services/PesananService.php
 
-namespace App\Services; // Pastikan namespace sesuai lokasi folder
+namespace App\Services;
 
 use App\Models\Pesanan;
 use App\Models\Ikan;
+use App\Models\User;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -13,92 +14,76 @@ use Exception;
 class PesananService
 {
     /**
-     * Membuat Pesanan baru, menyimpan item, dan mengurangi stok.
-     * Dijalankan dalam transaksi database.
-     *
-     * @param array $data Data dari form atau API (sudah divalidasi)
-     * @return Pesanan Model Pesanan yang baru dibuat
-     * @throws Exception Jika stok tidak cukup atau error lain
+     * Membuat Pesanan baru.
      */
-    public function createOrder(array $data): Pesanan
+    public function createOrder(array $data, ?User $user = null): Pesanan
     {
-        Log::info('PesananService::createOrder data received:', $data);
-
-        // Gunakan transaction untuk memastikan semua operasi berhasil atau dibatalkan bersamaan
-        return DB::transaction(function () use ($data) {
-
+        return DB::transaction(function () use ($data, $user) {
             $itemsData = $data['items'] ?? [];
-            $pesananData = Arr::except($data, ['items']); // Ambil data utama Pesanan
+            $pesananData = Arr::except($data, ['items']);
             $pivotData = [];
             $total = 0;
+            $listOfIkanToUpdateStock = []; // Tampung ikan & jumlah untuk update stok
 
-            // 1. Validasi stok & siapkan data pivot sebelum membuat pesanan utama
             if (empty($itemsData)) {
                 throw new Exception("Pesanan harus memiliki minimal 1 item ikan.");
             }
 
+            // 1. Validasi & Siapkan Data
             foreach ($itemsData as $item) {
                 $jumlah = intval($item['jumlah'] ?? 0);
                 $ikanId = $item['ikan_id'] ?? null;
 
-                if (!$ikanId || $jumlah <= 0) {
-                    throw new Exception("Data item tidak valid: " . json_encode($item));
-                }
+                if (!$ikanId || $jumlah <= 0)
+                    continue; // Lewati item tidak valid
 
                 $ikan = Ikan::find($ikanId);
-                if (!$ikan) {
+                if (!$ikan)
                     throw new Exception("Ikan dengan ID {$ikanId} tidak ditemukan.");
-                }
-
-                // Cek stok di sini sebelum lanjut
-                if ($ikan->stok < $jumlah) {
+                if ($ikan->stok < $jumlah)
                     throw new Exception("Stok untuk ikan '{$ikan->nama_ikan}' tidak mencukupi (Stok: {$ikan->stok}, Dipesan: {$jumlah}).");
-                }
 
-                $harga = $ikan->harga; // Ambil harga terbaru
+                $harga = $ikan->harga;
                 $total += $jumlah * $harga;
-                $pivotData[$ikanId] = [
-                    'jumlah' => $jumlah,
-                    'harga_saat_pesan' => $harga,
-                ];
+                $pivotData[$ikanId] = ['jumlah' => $jumlah, 'harga_saat_pesan' => $harga];
+                $listOfIkanToUpdateStock[] = ['instance' => $ikan, 'jumlah' => $jumlah]; // Simpan instance ikan
             }
 
-            // Isi total harga & status default jika belum ada dari $data
-            $pesananData['total_harga'] = $pesananData['total_harga'] ?? $total; // Gunakan total terhitung jika tidak ada
+            // Isi data pesanan
+            $pesananData['total_harga'] = $pesananData['total_harga'] ?? $total;
             $pesananData['status'] = $pesananData['status'] ?? 'Baru';
             $pesananData['tanggal_pesan'] = $pesananData['tanggal_pesan'] ?? now()->toDateString();
+            if ($user) {
+                $pesananData['user_id'] = $user->id;
+                $pesananData['nama_pelanggan'] = $pesananData['nama_pelanggan'] ?? $user->name;
+            } else {
+                $pesananData['user_id'] = $data['user_id'] ?? null;
+            }
 
-            // 2. Buat record Pesanan utama
+            // 2. Buat Pesanan Utama
             $pesanan = Pesanan::create($pesananData);
-            Log::info("Pesanan record created in service, ID: {$pesanan->id}");
 
-            // 3. Attach items ke tabel pivot
+            // 3. Attach Items
             if (!empty($pivotData)) {
-                Log::info("Attaching items via service for Pesanan ID: {$pesanan->id}", $pivotData);
                 $pesanan->items()->attach($pivotData);
-                Log::info("Items attached via service for Pesanan ID: {$pesanan->id}");
 
-                // 4. Kurangi Stok (Setelah attach berhasil)
-                foreach ($pivotData as $ikanId => $pivot) {
-                    $ikanInstance = Ikan::find($ikanId); // Ambil ulang instance
-                    if ($ikanInstance) {
-                        $affectedRows = $ikanInstance->decrement('stok', $pivot['jumlah']);
-                        Log::info("Stock decremented via service for Ikan ID: {$ikanId} by {$pivot['jumlah']}. Affected: {$affectedRows}");
-                    }
+                // 4. Kurangi Stok (setelah attach berhasil)
+                foreach ($listOfIkanToUpdateStock as $ikanData) {
+                    $ikanData['instance']->decrement('stok', $ikanData['jumlah']);
                 }
             }
 
-            return $pesanan; // Kembalikan pesanan yang berhasil
-        }); // Akhir transaction
+            return $pesanan;
+        });
     }
 
     /**
-     * Mengupdate Pesanan beserta item.
-     * TODO: Implementasi penyesuaian stok yang lebih kompleks saat update/delete item.
+     * Mengupdate Pesanan.
+     * Note: Penyesuaian stok saat update belum detail.
      */
     public function updateOrder(Pesanan $pesanan, array $data): Pesanan
     {
-        Log::info("PesananService::updateOrder initiated for ID {$pesanan->id}", $data);
+        // TODO: Implementasi logika penyesuaian stok saat update (kompleks)
 
         return DB::transaction(function () use ($pesanan, $data) {
             $itemsData = $data['items'] ?? [];
@@ -106,46 +91,29 @@ class PesananService
             $pivotData = [];
             $total = 0;
 
-            // Hitung ulang total & siapkan data pivot dari data baru
             if (is_array($itemsData)) {
                 foreach ($itemsData as $item) {
                     $jumlah = intval($item['jumlah'] ?? 0);
-                    $harga = $item['harga_saat_pesan'] ?? 0; // Ambil harga dari form saat edit
+                    $harga = $item['harga_saat_pesan'] ?? 0;
                     $ikanId = $item['ikan_id'] ?? null;
-
                     if ($ikanId && $jumlah > 0) {
                         $total += $jumlah * $harga;
-                        $pivotData[$ikanId] = [
-                            'jumlah' => $jumlah,
-                            'harga_saat_pesan' => $harga,
-                        ];
+                        $pivotData[$ikanId] = ['jumlah' => $jumlah, 'harga_saat_pesan' => $harga];
                     }
                 }
             }
             $pesananData['total_harga'] = $total;
-
-            // TODO: Logika Penyesuaian Stok Saat Update (kompleks)
-            // 1. Dapatkan item lama SEBELUM di-sync.
-            // 2. Bandingkan item lama dan baru ($pivotData).
-            // 3. Hitung selisih jumlah untuk setiap ikan.
-            // 4. Kembalikan stok untuk item yg dihapus/dikurangi.
-            // 5. Kurangi stok untuk item yg ditambah/ditambah jumlahnya.
-            // Ini perlu dilakukan sebelum atau sesudah sync dengan hati-hati.
-            // Untuk sekarang, kita lewati logika penyesuaian stok saat update.
+            $pesananData['user_id'] = $data['user_id'] ?? $pesanan->user_id;
 
             // 1. Update Pesanan Utama
             $pesanan->update($pesananData);
-            Log::info("PesananService: Pesanan record updated, ID: {$pesanan->id}");
 
             // 2. Sync Items (Pivot Table)
-            Log::info("PesananService: Syncing items for Pesanan ID: {$pesanan->id}");
-            $pesanan->items()->sync($pivotData); // Sync cocok untuk update
-            Log::info("PesananService: Items synced for Pesanan ID: {$pesanan->id}");
+            $pesanan->items()->sync($pivotData);
 
-            return $pesanan; // Kembalikan pesanan yang sudah diupdate
-        }); // Akhir transaction
+            return $pesanan;
+        });
     }
 
-    // Anda bisa tambahkan method deleteOrder(Pesanan $pesanan) di sini
-    // yang juga menangani pengembalian stok jika diperlukan.
+    // public function deleteOrder(Pesanan $pesanan): bool { ... }
 }

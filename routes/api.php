@@ -5,25 +5,63 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\IkanController;
 use App\Http\Controllers\Api\PesananApiController;
-use App\Http\Controllers\Api\AuthController; // <-- Import AuthController
+use App\Http\Controllers\Api\AuthController;
 
-// ... Route Ikan, Kategori, Pesanan (POST) ...
-Route::get('/ikan', [IkanController::class, 'index'])->name('api.ikan.index');
-Route::get('/ikan/{ikan:slug}', [IkanController::class, 'show'])->name('api.ikan.show');
+/*
+|----------------------------------------------------------------------
+| API Routes
+|----------------------------------------------------------------------
+| Here is where you can register API routes for your application.
+| These routes are loaded by the RouteServiceProvider and all of them
+| will be assigned to the "api" middleware group. Make something great!
+|
+*/
+
+// == API Endpoints Katalog Ikan (Publik) ==
+// Endpoint untuk mendapatkan daftar kategori ikan
 Route::get('/kategori', [IkanController::class, 'daftarKategori'])->name('api.kategori.index');
-Route::post('/pesanan', [PesananApiController::class, 'store'])->name('api.pesanan.store');
 
-// --- ROUTE OTENTIKASI ---
+// Endpoint untuk mendapatkan daftar ikan
+Route::get('/ikan', [IkanController::class, 'index'])->name('api.ikan.index');
+
+// Endpoint untuk mendapatkan informasi ikan berdasarkan slug
+Route::get('/ikan/{ikan:slug}', [IkanController::class, 'show'])->name('api.ikan.show');
+
+
+// == API Endpoints Otentikasi (Publik) ==
+// Endpoint untuk melakukan registrasi
 Route::post('/register', [AuthController::class, 'register'])->name('api.register');
+
+// Endpoint untuk login dan mendapatkan token
 Route::post('/login', [AuthController::class, 'login'])->name('api.login');
 
-// Route yang memerlukan otentikasi (token Sanctum)
+
+// == API Endpoints yang Membutuhkan Otentikasi (Sanctum Token) ==
+// Semua endpoint yang memerlukan otentikasi berada di dalam grup ini
 Route::middleware('auth:sanctum')->group(function () {
+
+    // Endpoint untuk logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('api.logout');
+
+    // Endpoint untuk mendapatkan data user yang sedang login
     Route::get('/user', [AuthController::class, 'user'])->name('api.user');
 
-    // Letakkan route API lain yang butuh login di sini
-    // Contoh: Melihat daftar pesanan milik user yang login?
-    // Route::get('/pesanan-saya', [PesananApiController::class, 'indexUser']);
+    // Endpoint untuk membuat pesanan
+    Route::post('/pesanan', [PesananApiController::class, 'store'])->name('api.pesanan.store');
+
+    // TODO: Tambahkan endpoint Pesanan lainnya (index, show, update, destroy) jika perlu proteksi
+    // Contoh untuk mengelola pesanan
+    // Route::get('/pesanan', [PesananApiController::class, 'index'])->name('api.pesanan.index');
+    // Route::get('/pesanan/{pesanan}', [PesananApiController::class, 'show'])->name('api.pesanan.show');
+    // Route::put('/pesanan/{pesanan}', [PesananApiController::class, 'update'])->name('api.pesanan.update');
+    // Route::delete('/pesanan/{pesanan}', [PesananApiController::class, 'destroy'])->name('api.pesanan.destroy');
+
+    // Letakkan endpoint API lain yang memerlukan user login di dalam grup ini
+
 });
-// --- AKHIR ROUTE OTENTIKASI ---
+
+// Route fallback jika endpoint API tidak ditemukan (opsional)
+// Jika endpoint yang diminta tidak ada, akan memberikan respons error 404
+Route::fallback(function () {
+    return response()->json(['message' => 'Endpoint tidak ditemukan.'], 404);
+});

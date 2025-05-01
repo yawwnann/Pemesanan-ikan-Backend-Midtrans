@@ -5,8 +5,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany; // Pastikan ini di-import
-use App\Models\Ikan;                                     // Pastikan ini di-import
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Models\Ikan;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Pesanan extends Model
 {
@@ -15,6 +16,7 @@ class Pesanan extends Model
     protected $table = 'pesanan';
 
     protected $fillable = [
+        'user_id',
         'nama_pelanggan',
         'nomor_whatsapp',
         'alamat_pengiriman',
@@ -40,5 +42,9 @@ class Pesanan extends Model
         return $this->belongsToMany(Ikan::class, 'ikan_pesanan')
             ->withPivot('jumlah', 'harga_saat_pesan')
             ->withTimestamps(); // Jika tabel pivot pakai timestamps
+    }
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

@@ -52,6 +52,12 @@ class PesananResource extends Resource
                     ->rows(3)
                     ->nullable()
                     ->columnSpanFull(),
+                Select::make('user_id')
+                    ->label('User Terdaftar (Opsional)')
+                    ->relationship('user', 'name') // Relasi ke 'user', tampilkan 'name'
+                    ->searchable()
+                    ->placeholder('Pilih User jika pesanan dari user terdaftar')
+                    ->helperText('Kosongkan jika pesanan bukan dari user terdaftar.'),
                 DatePicker::make('tanggal_pesan')
                     ->label('Tanggal Pesan')
                     ->default(now()),
