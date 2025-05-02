@@ -3,15 +3,12 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\IkanResource\Pages;
-use App\Filament\Resources\IkanResource\RelationManagers;
 use App\Models\Ikan;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Str;
 use Filament\Forms\Set;
 use Filament\Forms\Components\RichEditor;
@@ -22,7 +19,8 @@ use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\DeleteBulkAction;
-
+use Cloudinary\Cloudinary;
+use Filament\Forms\Components\FileUpload;
 
 class IkanResource extends Resource
 {
@@ -59,7 +57,6 @@ class IkanResource extends Resource
                     ->required()
                     ->numeric()
                     ->prefix('Rp'),
-
                 Forms\Components\TextInput::make('stok')
                     ->required()
                     ->numeric()
@@ -73,28 +70,44 @@ class IkanResource extends Resource
                     ])
                     ->required()
                     ->default('Tersedia'),
-                Forms\Components\FileUpload::make('gambar_utama')
+                FileUpload::make('gambar_utama')
                     ->label('Gambar Utama')
                     ->image()
-                    ->directory('ikan-images')
-                    ->visibility('public')
+                    ->disk('cloudinary') // <-- Tentukan disk Cloudinary
+                    ->directory('ikan-images') // <-- Opsional: Folder di Cloudinary
                     ->nullable()
                     ->columnSpanFull(),
             ]);
+    }
+
+    public static function uploadImageToCloudinary($imageFile, Set $set)
+    {
+        if ($imageFile) {
+            // Upload gambar ke Cloudinary
+            $cloudinary = new Cloudinary();
+            $uploadedImage = $cloudinary->uploadApi()->upload($imageFile->getRealPath(), [
+                'folder' => 'ikan-images', // Folder di Cloudinary
+                'public_id' => uniqid('ikan_', true),
+            ]);
+
+            // Simpan URL gambar dari Cloudinary
+            $set('gambar_utama', $uploadedImage['secure_url']);
+        }
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                // ImageColumn::make('gambar_utama') 
-                //     ->label('Gambar')
-                //     ->disk('public')
-                //     ->width(80)
-                //     ->height(60),
                 TextColumn::make('nama_ikan')
                     ->searchable()
                     ->sortable(),
+                ImageColumn::make('gambar_utama')
+                    ->label('Gambar')
+                    ->disk('cloudinary') // <-- Tentukan disk Cloudinary
+                    ->width(80)
+                    ->height(60)
+                    ->defaultImageUrl(url('/images/placeholder.png')),
                 TextColumn::make('kategori.nama_kategori')
                     ->label('Kategori')
                     ->searchable()
@@ -105,7 +118,6 @@ class IkanResource extends Resource
                 TextColumn::make('stok')
                     ->numeric()
                     ->sortable(),
-
                 TextColumn::make('status_ketersediaan')
                     ->label('Status')
                     ->badge()
@@ -114,8 +126,8 @@ class IkanResource extends Resource
                         'Habis' => 'danger',
                         'Pre-Order' => 'warning',
                         default => 'gray',
-                    })
-                    ->searchable(),
+                    }),
+
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -150,9 +162,7 @@ class IkanResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 
     public static function getPages(): array
@@ -163,4 +173,5 @@ class IkanResource extends Resource
             'edit' => Pages\EditIkan::route('/{record}/edit'),
         ];
     }
+
 }

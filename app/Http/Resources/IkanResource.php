@@ -4,7 +4,8 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Storage; // <-- Import Storage
+// use Illuminate\Support\Facades\Storage; // <-- Import Storage
+use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
 
 class IkanResource extends JsonResource
 {
@@ -25,7 +26,11 @@ class IkanResource extends JsonResource
             'stok' => (int) $this->stok,
             'status_ketersediaan' => $this->status_ketersediaan,
             // Buat URL lengkap untuk gambar
-            'gambar_url' => $this->gambar_utama ? Storage::url($this->gambar_utama) : null,
+            'gambar_url' => $this->gambar_utama
+                // Menggunakan helper dari package Cloudinary untuk mendapatkan URL
+                ? Cloudinary::getUrl($this->gambar_utama)
+                // Atau coba: Cloudinary::secure_url($this->gambar_utama) // Jika ingin https
+                : null,
             'kategori' => KategoriResource::make($this->whenLoaded('kategori')),
             'dibuat_pada' => $this->created_at,
             'diupdate_pada' => $this->updated_at,
