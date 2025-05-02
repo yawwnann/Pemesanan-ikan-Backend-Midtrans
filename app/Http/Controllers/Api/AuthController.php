@@ -14,7 +14,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -26,28 +25,25 @@ class AuthController extends Controller
      */
     public function register(RegisterRequest $request): JsonResponse
     {
-        // Validasi data input melalui RegisterRequest
+        // Validasi dan simpan pengguna baru
         $validatedData = $request->validated();
-
-        // Membuat pengguna baru
         $user = User::create([
             'name' => $validatedData['name'],
             'email' => $validatedData['email'],
-            'password' => Hash::make($validatedData['password']), // Pastikan password di-hash
+            'password' => Hash::make($validatedData['password']),
         ]);
 
-        // Menambahkan role 'user' ke user baru
+        // Attach role 'user' ke pengguna baru
         try {
-            $userRole = Role::where('slug', 'user')->firstOrFail(); // Cari role dengan slug 'user'
-            $user->roles()->attach($userRole->id); // Attach role ke user baru
+            $userRole = Role::where('slug', 'user')->firstOrFail();
+            $user->roles()->attach($userRole->id);
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error("Role 'user' not found for registration user ID: " . $user->id . " - " . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error("Role 'user' not found: " . $e->getMessage());
         }
 
-        // Membuat token baru untuk user
+        // Generate token
         $token = $user->createToken('api-token-' . $user->id)->plainTextToken;
 
-        // Mengembalikan response JSON dengan data user dan token
         return response()->json([
             'message' => 'Registrasi berhasil.',
             'user' => new UserResource($user),
@@ -56,31 +52,24 @@ class AuthController extends Controller
     }
 
     /**
-     * Melakukan login pengguna.
+     * Login pengguna.
      *
      * @param LoginRequest $request
      * @return JsonResponse
      */
     public function login(LoginRequest $request): JsonResponse
     {
-        // Validasi data input melalui LoginRequest
+        // Validasi dan autentikasi pengguna
         $credentials = $request->validated();
-
-        // Melakukan autentikasi dengan kredensial yang diberikan
         if (!Auth::attempt($credentials)) {
             return response()->json(['message' => 'Email atau password salah.'], 401);
         }
 
-        // Ambil user setelah otentikasi berhasil
+        // Ambil user dan generate token
         $user = User::where('email', $credentials['email'])->firstOrFail();
-
-        // Muat hubungan roles yang dimiliki oleh user
         $user->load('roles');
-
-        // Membuat token baru setelah login berhasil
         $token = $user->createToken('api-token-' . $user->id)->plainTextToken;
 
-        // Mengembalikan response JSON dengan data user dan token
         return response()->json([
             'message' => 'Login berhasil.',
             'user' => new UserResource($user),
@@ -89,16 +78,14 @@ class AuthController extends Controller
     }
 
     /**
-     * Logout pengguna dan hapus token saat ini.
+     * Logout pengguna dan hapus token.
      *
      * @param Request $request
      * @return JsonResponse
      */
     public function logout(Request $request): JsonResponse
     {
-        // Menghapus token akses yang sedang digunakan
         $request->user()->currentAccessToken()->delete();
-
         return response()->json(['message' => 'Logout berhasil.']);
     }
 
@@ -110,7 +97,6 @@ class AuthController extends Controller
      */
     public function user(Request $request): JsonResponse
     {
-        // Mengembalikan data pengguna yang sedang login
         return response()->json([
             'user' => new UserResource($request->user()),
         ]);
