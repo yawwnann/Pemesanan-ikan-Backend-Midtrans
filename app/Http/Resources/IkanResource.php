@@ -25,12 +25,7 @@ class IkanResource extends JsonResource
             'harga' => (int) $this->harga,
             'stok' => (int) $this->stok,
             'status_ketersediaan' => $this->status_ketersediaan,
-            // Buat URL lengkap untuk gambar
-            'gambar_url' => $this->gambar_utama
-                // Menggunakan helper dari package Cloudinary untuk mendapatkan URL
-                ? Cloudinary::getUrl($this->gambar_utama)
-                // Atau coba: Cloudinary::secure_url($this->gambar_utama) // Jika ingin https
-                : null,
+            'gambar_utama' => $this->gambar_utama,
             'kategori' => KategoriResource::make($this->whenLoaded('kategori')),
             'dibuat_pada' => $this->created_at,
             'diupdate_pada' => $this->updated_at,
