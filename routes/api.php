@@ -3,6 +3,7 @@
 // File: routes/api.php
 
 use Illuminate\Http\Request;
+use App\Http\Controllers\Api\UserProfileController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\IkanController;
 use App\Http\Controllers\Api\PesananApiController;
@@ -67,4 +68,10 @@ Route::middleware('auth:sanctum')->group(function () {
 // Jika endpoint yang diminta tidak ada, akan memberikan respons error 404
 Route::fallback(function () {
     return response()->json(['message' => 'Endpoint tidak ditemukan.'], 404);
+});
+Route::middleware('auth:sanctum')->group(function () {
+    // ... (route API terotentikasi lainnya seperti /api/user)
+    Route::post('/user/profile-photo', [UserProfileController::class, 'updateProfilePhoto'])->name('user.photo.update');
+    // Tambahkan route untuk menghapus foto jika perlu
+    // Route::delete('/user/profile-photo', [UserProfileController::class, 'deleteProfilePhoto'])->name('user.photo.delete');
 });

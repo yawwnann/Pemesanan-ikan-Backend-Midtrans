@@ -17,6 +17,7 @@ class UserResource extends JsonResource
                 return $this->roles->pluck('name');
             }),
             'email_verified_at' => $this->email_verified_at?->toISOString(),
+            'profile_photo_url' => $this->profile_photo_url,
 
             'created_at' => $this->created_at?->toISOString(),
         ];
