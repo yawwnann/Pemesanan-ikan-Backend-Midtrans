@@ -53,7 +53,10 @@ class User extends Authenticatable
         return $this->hasMany(Pesanan::class, 'user_id');
     }
     // --- Akhir Relasi ---
-
+    public function keranjangItems(): HasMany
+    {
+        return $this->hasMany(KeranjangItem::class);
+    }
 
     // --- Accessor URL Foto Profil ---
     public function getProfilePhotoUrlAttribute(): string

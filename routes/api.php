@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\IkanController;
 use App\Http\Controllers\Api\PesananApiController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\KeranjangController;
 
 /*
 |--------------------------------------------------------------------------
@@ -61,6 +62,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::delete('/pesanan/{pesanan}', [PesananApiController::class, 'destroy'])->name('api.pesanan.destroy');
 
     // Letakkan endpoint API lain yang memerlukan user login di dalam grup ini
+    Route::get('/keranjang', [KeranjangController::class, 'index'])->name('keranjang.index');
+    Route::post('/keranjang', [KeranjangController::class, 'store'])->name('keranjang.store');
+    // Nama parameter {keranjangItem} harus cocok dengan variabel $keranjangItem di controller
+    Route::put('/keranjang/{keranjangItem}', [KeranjangController::class, 'update'])->name('keranjang.update');
+    Route::delete('/keranjang/{keranjangItem}', [KeranjangController::class, 'destroy'])->name('keranjang.destroy');
 
 });
 
