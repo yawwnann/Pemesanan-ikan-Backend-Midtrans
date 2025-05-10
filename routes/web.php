@@ -10,3 +10,4 @@ Route::get('/', function () {
 
 Route::get('/pesanan/{pesanan}/pdf', [PdfController::class, 'downloadPesananPdf'])
     ->name('pesanan.pdf');
+

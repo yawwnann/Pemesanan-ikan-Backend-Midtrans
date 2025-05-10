@@ -73,16 +73,16 @@ class PesananResource extends JsonResource
 
                     $jumlah = (int) $pivotData->jumlah;
                     $harga = (int) $pivotData->harga_saat_pesan;
-                    $subtotal = $harga * $jumlah;
-
+                    $subtotal = $harga * $jumlah; // <-- PERHITUNGAN SUBTOTAL
+    
                     return [
                         'ikan_id' => $ikan->id,
-                        'nama_ikan' => $ikan->nama_ikan ?? 'Nama Produk Tidak Ada', // Ganti jika nama properti berbeda
-                        'gambar_utama' => $ikan->gambar_utama ?? null, // Sertakan gambar jika perlu
-                        'slug' => $ikan->slug ?? null, // Sertakan slug jika perlu
-                        'jumlah' => $jumlah, // Ambil dari pivot
-                        'harga_saat_pesan' => $harga, // Ambil dari pivot
-                        'subtotal' => $subtotal // Hitung subtotal per item
+                        'nama_ikan' => $ikan->nama_ikan ?? 'Nama Produk Tidak Ada',
+                        'gambar_utama' => $ikan->gambar_utama ?? null,
+                        'slug' => $ikan->slug ?? null,
+                        'jumlah' => $jumlah,
+                        'harga_saat_pesan' => $harga,
+                        'subtotal' => $subtotal // <-- SUBTOTAL DIMASUKKAN KE RESPONS
                     ];
                 }); // filter() dihapus agar tidak menghilangkan item jika pivot bermasalah, tapi beri nilai default
             }),
