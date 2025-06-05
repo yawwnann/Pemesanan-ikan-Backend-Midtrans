@@ -9,7 +9,7 @@ use App\Http\Controllers\Api\IkanController;
 use App\Http\Controllers\Api\PesananApiController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\KeranjangController;
-use App\Http\Controllers\Api\PaymentController; // Pastikan import ini ada
+use App\Http\Controllers\Api\PaymentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,11 +47,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Pesanan
     Route::post('/pesanan', [PesananApiController::class, 'store'])->name('api.pesanan.store');
     // --- PERBAIKAN: Route GET /pesanan diaktifkan (uncomment) ---
-    Route::get('/pesanan', [PesananApiController::class, 'index'])->name('api.pesanan.index'); // <-- UNCOMMENT BARIS INI
-    Route::get('/pesanan/{pesanan}', [PesananApiController::class, 'show'])->name('api.pesanan.show'); // <-- UNCOMMENT JUGA JIKA PERLU HALAMAN DETAIL
-    // Route::put('/pesanan/{pesanan}', [PesananApiController::class, 'update'])->name('api.pesanan.update'); // Uncomment jika perlu update
-    // Route::delete('/pesanan/{pesanan}', [PesananApiController::class, 'destroy'])->name('api.pesanan.destroy'); // Uncomment jika perlu delete
-
+    Route::get('/pesanan', [PesananApiController::class, 'index'])->name('api.pesanan.index');
+    Route::get('/pesanan/{pesanan}', [PesananApiController::class, 'show'])->name('api.pesanan.show');
+    // Route::put('/pesanan/{pesanan}', [PesananApiController::class, 'update'])->name('api.pesanan.update');
+    // Route::delete('/pesanan/{pesanan}', [PesananApiController::class, 'destroy'])->name('api.pesanan.destroy'); 
     // Keranjang
     Route::get('/keranjang', [KeranjangController::class, 'index'])->name('keranjang.index');
     Route::post('/keranjang', [KeranjangController::class, 'store'])->name('keranjang.store');
@@ -68,4 +67,3 @@ Route::fallback(function () {
     return response()->json(['message' => 'Endpoint tidak ditemukan.'], 404);
 });
 
-// Catatan: Blok middleware auth:sanctum kedua sudah tidak diperlukan karena routenya dipindah ke grup utama.
